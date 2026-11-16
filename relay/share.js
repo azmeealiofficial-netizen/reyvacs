@@ -127,10 +127,12 @@ function shareText(item, extra, cs) {
   const head = isOwn(item) ? `${tg.BRAND_LABEL[item.brand] || item.brand} · 📣 <b>Share</b> · #${item.id}` : `📣 <b>Share</b> · #${item.id}`;
   const csLine = cs && cs.status === 'done' ? '🎨 Also loaded in Creative Studio — check it wasn\'t posted from there.' : null;
   const xLine = xWaiting(ch) ? '👆 <b>X is by hand</b> for now: tap 🐦 Post on X, send it there, then ✔️ X posted.' : null;
+  const noneLine = keysOf(ch).length ? null : `📭 No social channels set up yet — save the image and post it by hand. Once a channel is set up, /share ${item.id} adds the share buttons.`;
   const tail = [
     esc(urlOf(item)),
     warns.length ? warns.join('\n') : null,
     xLine,
+    noneLine,
     csLine,
     extra || null,
     shared ? null : '<i>↩️ Reply with a new caption to replace it.</i>',
@@ -154,6 +156,14 @@ function shareText(item, extra, cs) {
 function shareButtons(item, confirming = false) {
   const ch = channelsOf(item);
   const keys = keysOf(ch);
+  // REYVA: no channels set up yet — the card is for saving and posting by hand.
+  if (!keys.length) return { inline_keyboard: [
+    [{ text: '🔁 New caption', callback_data: `rl:nc:${item.id}` }, { text: '✏️ Edit caption', callback_data: `rl:ec:${item.id}` }],
+    [paletteOf(item) === 'red'
+      ? { text: '🎨 Card: 🔴 Red — switch to 🔵 Blue', callback_data: `rl:pc:${item.id}` }
+      : { text: '🎨 Card: 🔵 Blue — switch to 🔴 Red', callback_data: `rl:pc:${item.id}` }],
+    [{ text: '📭 No channels set up yet', callback_data: `rl:t:${item.id}:none` }],
+  ] };
   const btns = keys.map(k => {
     const c = ch[k], C = CHANNELS[k];
     const mark = c.done ? '✅' : k === 'x' && c.manual && c.on ? '👆' : c.error && c.on ? '⚠️' : c.on ? '☑' : '☐';
@@ -236,10 +246,8 @@ async function prepare(item, headline, replyTo) {
   const chat = chatOf(item);
   headline = headline || headlineOf(item);
   const ready = Object.keys(CHANNELS).filter(k => CHANNELS[k].ready(brand));
-  if (!ready.length) {
-    await tg.say(`📣 No ${brandName(brand)} social channels are set up yet, so there is nothing to share to.`, replyTo, chat);
-    return null;
-  }
+  // REYVA: the card is posted even with no channels set up — it is still the
+  // image to save and post by hand (Azmee, 2026-11-16). VxD stopped here.
   let card;
   try {
     card = await renderCard({ brand, headline, photo: item.source_image || null, url: urlOf(item), section: isOwn(item) ? item.source_section : null, palette: paletteOf(item) });
@@ -311,6 +319,7 @@ async function toggle(item, key) {
   const ch = channelsOf(item);
   if (!ch[key]) {
     if (key !== 'none') return { answer: `That channel is not set up for ${brandName(brandOf(item))}.` };
+    if (!keysOf(ch).length) return { answer: 'No social channels are set up yet — save the card and post it by hand.' };
     const s = sharedLine(ch);
     return { answer: s ? s.replace(/<[^>]+>/g, '') : 'Everything is posted.' };
   }
