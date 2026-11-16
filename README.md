@@ -14,6 +14,7 @@ diff. Everything Reyva-specific is marked `REYVA` in the code; the main pieces:
 | `lib/reyva-article.js` | Reads articles from reyvaonline.com's JSON API |
 | `cs/lib/share-targets.js` | `reyva` is the only masthead |
 | `auth-core.js` | Stand-in for VxD login — **open access for now** |
+| `relay/` | Telegram share desk — VxD's share-group flow, Reyva only |
 
 ## Run on the home server
 
@@ -30,3 +31,20 @@ Point `reyva.azmee.dev` at port 3000 on the reverse proxy. Health check: `/healt
 npm install
 DATABASE_URL=postgres://user:pass@localhost:5432/reyva npm start
 ```
+
+## Telegram share desk
+
+Every new reyvaonline.com story arrives in the desk group as a share card:
+the studio's red card (drawn on the server by the studio's own
+`reyva-card.js`), an AI caption, a tick per configured channel and
+📣 Share. VxD Super App's share-group flow (`relay/share.js` unchanged);
+no rewrite or newsroom desk.
+
+In the group: `/pull <link>` (any Reyva story), `/share <id>` (fresh card),
+`/status`, `/id`. Reply to a card to replace its caption, or ✏️ Edit caption
+with `old → new` lines to fix a word. Posting from the studio ticks the
+story's card.
+
+Setup: see the "Telegram share desk" block in `.env.example`. The first check
+after switching on only records where the site is; cards start with the next
+story.

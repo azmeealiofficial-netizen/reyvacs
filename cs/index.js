@@ -5,8 +5,7 @@
 // layout kept as-is so fixes can be diffed across. What differs from VxD:
 //   • Served at the site root by ../server.js, not mounted at /cs.
 //   • ../auth-core is a stand-in: open access, one user, one masthead.
-//   • The "tick the relay share card" middleware is gone — VxD's Telegram
-//     relay groups (relay/share.js) do not exist here.
+//   • relay/ is Reyva's Telegram share desk (VxD's share-group flow only).
 //   • /api/fetch-article reads reyvaonline.com's JSON API (lib/reyva-article)
 //     — the site renders client-side, so the Fanvaiy scraper below finds no
 //     text there. The scraper is left in place, unreachable for Reyva.
@@ -197,7 +196,26 @@ router.post('/api/settings', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-/* (VxD's relay share-card tick middleware removed — no relay in this app.) */
+/* ─── Posts from here tick the story's Telegram share card ───
+ * The Reyva desk group (relay/) posts the same stories. When a post from
+ * Creative Studio succeeds, the story's share card in the group shows that
+ * channel as done — by whom, "(Creative Studio)" — so nobody posts it twice.
+ * Best effort: a card that can't be updated never fails the post. */
+const SHARE_ROUTES = { '/api/facebook/share': 'facebook', '/api/telegram/share': 'telegram', '/api/viber/share': 'viber', '/api/x/publish': 'x' };
+router.use((req, res, next) => {
+  const channel = req.method === 'POST' && SHARE_ROUTES[(req.path || '').replace(/\/+$/, '')];
+  if (!channel) return next();
+  const { brand, articleUrl } = req.body || {};
+  const who = (req.vsaUser && (req.vsaUser.name || req.vsaUser.username)) || 'someone';
+  res.on('finish', () => {
+    // xManual: X answered "post it by hand" — nothing is on X yet.
+    if (res.statusCode !== 200 || res.locals.xManual || !articleUrl || !brand) return;
+    Promise.resolve()
+      .then(() => require('../relay/share').markExternal({ brand, url: articleUrl, channel, who, via: 'Creative Studio' }))
+      .catch(e => console.warn('[cs] share card tick:', e.message));
+  });
+  next();
+});
 
 /* ─── AI extraction ─── */
 router.use('/api/ai', aiRoutes);

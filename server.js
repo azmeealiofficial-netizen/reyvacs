@@ -10,6 +10,7 @@
 const express = require('express');
 const path = require('path');
 const cs = require('./cs');
+const relay = require('./relay');   // Telegram share desk (relay/index.js)
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,11 +28,15 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 app.get(['/privacy', '/privacy-policy', '/data-deletion'], (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
 
+// Telegram share desk webhook — before the studio, whose SPA fallback is a catch-all.
+app.use('/relay', relay.router);
+
 app.use('/', cs.router);
 
 (async () => {
   try {
     await cs.init();
+    await relay.init();
   } catch (e) {
     console.error('[boot] database init failed:', e.message);
     process.exit(1);
@@ -39,5 +44,6 @@ app.use('/', cs.router);
   app.listen(PORT, () => {
     console.log(`Reyva Creative Studio on :${PORT}`);
     cs.startJobs();
+    relay.startJobs();
   });
 })();
