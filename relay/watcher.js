@@ -28,7 +28,7 @@ async function latest() {
   if (!r.ok) throw new Error('article list HTTP ' + r.status);
   const d = await r.json();
   return (d.articles || [])
-    .map(a => ({ id: String(a.slug || a.id), at: Date.parse(a.pubDate) }))
+    .map(a => ({ id: String(a.slug || a.id), at: Date.parse(a.pubDate), title: String(a.title || '').trim() }))
     .filter(a => /^\d+$/.test(a.id) && Number.isFinite(a.at));
 }
 

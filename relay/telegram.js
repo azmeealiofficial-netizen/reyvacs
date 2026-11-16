@@ -247,6 +247,22 @@ async function sendPhotoBuffer({ buffer, caption, markup, replyTo, chat }) {
   return j.result;
 }
 
+/** REYVA: swap a sent photo for a new one (🎨 colour switch), keeping caption + buttons. */
+async function editPhotoBuffer({ chat, messageId, buffer, caption, markup }) {
+  const t = token();
+  if (!t) throw new Error('RELAY_TELEGRAM_BOT_TOKEN is not set');
+  const fd = new FormData();
+  fd.append('chat_id', String(chat));
+  fd.append('message_id', String(messageId));
+  fd.append('media', JSON.stringify({ type: 'photo', media: 'attach://card', caption: caption || '', parse_mode: 'HTML' }));
+  if (markup) fd.append('reply_markup', JSON.stringify(markup));
+  fd.append('card', new Blob([buffer], { type: 'image/jpeg' }), 'card.jpg');
+  const r = await fetch(`https://api.telegram.org/bot${t}/editMessageMedia`, { method: 'POST', body: fd, signal: AbortSignal.timeout(60000) });
+  const j = await r.json().catch(() => ({ ok: false, description: `HTTP ${r.status}` }));
+  if (!j.ok && !/message is not modified/i.test(j.description || '')) throw new Error(`Telegram editMessageMedia: ${j.description}`);
+  return j.result;
+}
+
 async function say(text, replyTo, chat) {
   return call('sendMessage', {
     chat_id: chat || chatId(), text, parse_mode: 'HTML',
@@ -269,6 +285,7 @@ async function setWebhook(url, secret) {
 }
 
 module.exports = {
+  editPhotoBuffer,
   call, esc, chatId, shareChatId, token, BRAND_LABEL,
   sendCard, updateCard, cardButtons,
   sendDraft, closeDraft, reopenDraft, draftButtons, sectionPicker, setDraftMarkup,

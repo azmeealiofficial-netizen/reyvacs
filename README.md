@@ -40,8 +40,11 @@ the studio's red card (drawn on the server by the studio's own
 📣 Share. VxD Super App's share-group flow (`relay/share.js` unchanged);
 no rewrite or newsroom desk.
 
-In the group: `/pull <link>` (any Reyva story), `/share <id>` (fresh card),
-`/status`, `/id`. Reply to a card to replace its caption, or ✏️ Edit caption
+Cards arrive **blue** (the normal card); 🎨 on a card switches it to red and
+back, until anything has been shared. A fixed keyboard sits under the message
+box (🔗 Share a link · 📰 Latest stories · 📊 Status · ❓ Help), and "/" lists
+the commands: `/latest`, `/pull <link>`, `/share <id>`, `/status`, `/menu`,
+`/help`, `/id`. Pasting a Reyva link on its own also makes a card. Reply to a card to replace its caption, or ✏️ Edit caption
 with `old → new` lines to fix a word. Posting from the studio ticks the
 story's card.
 

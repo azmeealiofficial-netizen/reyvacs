@@ -57,6 +57,8 @@ async function init() {
   // Share-only mode (a masthead's own stories) and the chat each share card is in.
   await pool.query(`ALTER TABLE relay_items ADD COLUMN IF NOT EXISTS mode VARCHAR(10) NOT NULL DEFAULT 'relay'`);
   await pool.query(`ALTER TABLE relay_items ADD COLUMN IF NOT EXISTS share_chat_id BIGINT`);
+  // REYVA: the share card's colour (blue | red), switched with 🎨 on the card.
+  await pool.query(`ALTER TABLE relay_items ADD COLUMN IF NOT EXISTS card_palette VARCHAR(10)`);
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS relay_items_mode_brand_source ON relay_items (mode, brand, source_id)`);
   // The original UNIQUE (brand, source_id) would stop a Dhuvas story being both
   // a relay row and a share row. Dropped by shape rather than by name, so a

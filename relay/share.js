@@ -41,7 +41,10 @@
 
 const db = require('./db');
 const tg = require('./telegram');
-const { renderCard } = require('./card');
+const { renderCard, defaultPalette } = require('./card');
+// REYVA: each story's card colour. Blue is the desk's normal card; 🎨 on the
+// card switches it to red (and back) until anything has been shared.
+const paletteOf = item => (item.card_palette === 'red' || item.card_palette === 'blue' ? item.card_palette : defaultPalette());
 const { CHANNELS } = require('../cs/lib/publishers');
 const xBudget = require('../cs/lib/x-budget');
 const { generateCaption } = require('../cs/routes/fb-caption');
@@ -179,6 +182,11 @@ function shareButtons(item, confirming = false) {
       { text: '🔁 New caption', callback_data: `rl:nc:${item.id}` },
       { text: '✏️ Edit caption', callback_data: `rl:ec:${item.id}` },
     ]);
+    // REYVA: colour switch — only before anything is shared, so every channel
+    // gets the same image.
+    if (!anyDone) rows.push([paletteOf(item) === 'red'
+      ? { text: '🎨 Card: 🔴 Red — switch to 🔵 Blue', callback_data: `rl:pc:${item.id}` }
+      : { text: '🎨 Card: 🔵 Blue — switch to 🔴 Red', callback_data: `rl:pc:${item.id}` }]);
     rows.push([
       { text: anyDone ? `📣 Share to ${pending} more` : pending ? `📣 Share (${pending})` : '📣 Share', callback_data: `rl:sh:${item.id}` },
     ]);
@@ -234,7 +242,7 @@ async function prepare(item, headline, replyTo) {
   }
   let card;
   try {
-    card = await renderCard({ brand, headline, photo: item.source_image || null, url: urlOf(item), section: isOwn(item) ? item.source_section : null });
+    card = await renderCard({ brand, headline, photo: item.source_image || null, url: urlOf(item), section: isOwn(item) ? item.source_section : null, palette: paletteOf(item) });
   } catch (e) {
     console.error(`[relay/share] card #${item.id}:`, e.message);
     await tg.say(`⚠️ Couldn't draw the share card for #${item.id}: ${esc(e.message)}`, replyTo, chat);
@@ -311,6 +319,22 @@ async function toggle(item, key) {
   const row = await db.update(item.id, { share_channels: JSON.stringify(ch) });
   await refresh(row);
   return { answer: `${CHANNELS[key].label}: ${ch[key].on ? 'on' : 'off'}` };
+}
+
+/**
+ * REYVA: 🎨 on the card — redraw it in the other colour and swap the image in
+ * place (same message, caption and ticks). Locked once any channel has posted,
+ * so a story never goes out in two colours.
+ */
+async function recolor(item) {
+  const ch = channelsOf(item);
+  if (keysOf(ch).some(k => ch[k].done)) return { answer: 'Already shared — the colour is locked.' };
+  const next = paletteOf(item) === 'red' ? 'blue' : 'red';
+  const card = await renderCard({ brand: brandOf(item), headline: headlineOf(item), photo: item.source_image || null, url: urlOf(item), palette: next });
+  const row = await db.update(item.id, { card_palette: next, share_card: card });
+  await tg.editPhotoBuffer({ chat: chatOf(row), messageId: Number(row.share_msg_id), buffer: card,
+    caption: shareText(row, null, await csStatus(row)), markup: shareButtons(row) });
+  return { answer: next === 'red' ? '🔴 Red card' : '🔵 Blue card' };
 }
 
 async function newCaption(item) {
@@ -509,4 +533,4 @@ async function markExternal({ brand, url, channel, who, via = 'Creative Studio' 
 /** A share card that still takes taps: posted, and (for relay rows) published. */
 const isLive = item => !!(item && item.share_msg_id && (isOwn(item) ? item.status === 'share' : item.status === 'published'));
 
-module.exports = { prepare, fromSource, toggle, share, markExternal, markPosted, xPosted, newCaption, replaceCaption, askCaptionEdit, parseCaptionPrompt, shareText, shareButtons, isLive, chatOf, headlineOf };
+module.exports = { recolor, paletteOf, prepare, fromSource, toggle, share, markExternal, markPosted, xPosted, newCaption, replaceCaption, askCaptionEdit, parseCaptionPrompt, shareText, shareButtons, isLive, chatOf, headlineOf };

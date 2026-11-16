@@ -76,18 +76,21 @@ async function loadPhoto(src) {
 }
 
 /**
- * The 4:5 news card, as the studio exports it. Colour: RELAY_CARD_PALETTE
- * (red, Reyva's default, or blue). The category word beside the logo is off,
- * as it is by default in the studio.
+ * The 4:5 news card, as the studio exports it. palette: 'blue' (the desk's
+ * normal card) or 'red' (switched per story with 🎨 on the share card);
+ * RELAY_CARD_PALETTE changes the default. The category word beside the logo
+ * is off, as it is by default in the studio.
  */
-async function renderCard({ brand = 'reyva', headline, photo, url }) {
+const defaultPalette = () => ((process.env.RELAY_CARD_PALETTE || 'blue').trim().toLowerCase() === 'red' ? 'red' : 'blue');
+
+async function renderCard({ brand = 'reyva', headline, photo, url, palette }) {
   if (brand !== 'reyva') throw new Error(`no share card design for ${brand}`);
   ensureFonts();
   const canvas = canvasLib().createCanvas(W, H);
   const ctx = canvas.getContext('2d');
   let img = null;
   try { img = await loadPhoto(photo); } catch (e) { console.warn('[relay/card] photo:', e.message); }
-  const pal = (process.env.RELAY_CARD_PALETTE || 'red').trim().toLowerCase() === 'blue' ? 'blue' : 'red';
+  const pal = palette === 'red' || palette === 'blue' ? palette : defaultPalette();
   await card().draw(ctx, {
     w: W, h: H, tpl: 'news', pal,
     cc: { headline: headline || '', url: url || '', eyebrow: '' },
@@ -102,4 +105,4 @@ function todayDhivehi(now = new Date()) {
   return `${d.getUTCDate()} ${MONTHS_DV[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
-module.exports = { renderCard, todayDhivehi };
+module.exports = { renderCard, todayDhivehi, defaultPalette };

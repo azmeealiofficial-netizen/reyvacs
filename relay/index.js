@@ -14,9 +14,12 @@
 //   ☑ 📘 Facebook  ☑ 📢 Telegram  ☑ 🐦 X  ☑ 🟣 Viber
 //   🔁 New caption   ✏️ Edit caption   📣 Share (n)
 //
-// Buttons and caption editing are VxD's share.js, unchanged. In the group:
-// /pull <link>, /share <id>, /status, /id; reply to a card to replace its
-// caption. Posting from Creative Studio ticks the matching card (cs/index.js).
+// Buttons and caption editing are VxD's share.js. Reyva adds 🎨 on each card
+// (blue is the normal card, red one tap away — locked once shared), a fixed
+// keyboard (🔗 Share a link · 📰 Latest stories · 📊 Status · ❓ Help) and the
+// "/" command menu. Commands: /latest /pull /share /status /menu /help /id.
+// Pasting a reyvaonline.com link on its own also makes a card. Posting from
+// Creative Studio ticks the matching card (cs/index.js).
 //
 // Off unless RELAY_ENABLED=1. Variables: see README.md (Telegram desk).
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,12 +53,15 @@ function allowed(from, chat) {
 
 // ─── button taps ─────────────────────────────────────────────────────────────
 async function onCallback(cb) {
-  const m = /^rl:(t|sh|nc|ec|mp|xd):(\d+)(?::([a-z]+))?$/.exec(cb.data || '');
+  const m = /^rl:(t|sh|nc|ec|mp|xd|pc|pl):(\d+)(?::([a-z]+))?$/.exec(cb.data || '');
   if (!m) return tg.answer(cb.id);
   if (!allowed(cb.from, cb.message?.chat)) return tg.answer(cb.id, 'You are not an approver in this group.', true);
   const [, action, idStr, arg] = m;
   const id = Number(idStr);
   const who = nameOf(cb.from);
+
+  // 📰 Latest → card one: the number is the reyvaonline.com story id.
+  if (action === 'pl') { await tg.answer(cb.id, 'Making the card…'); return pullAndCard(`https://reyvaonline.com/news/${idStr}`, cb.message.chat.id, null); }
 
   const item = await db.get(id);
   if (!share.isLive(item) || share.chatOf(item) !== String(cb.message.chat.id)) {
@@ -66,10 +72,71 @@ async function onCallback(cb) {
   if (action === 'ec') { await tg.answer(cb.id, 'Reply to the message below'); return share.askCaptionEdit(item, cb.from); }
   if (action === 'mp') { const r = await share.markPosted(item, who, arg); return tg.answer(cb.id, r.answer); }
   if (action === 'xd') { const r = await share.xPosted(item, who); return tg.answer(cb.id, r.answer); }
+  if (action === 'pc') {
+    try { const r = await share.recolor(item); return tg.answer(cb.id, r.answer); }
+    catch (e) { console.error(`[relay] recolor #${id}:`, e.message); return tg.answer(cb.id, 'Could not redraw the card — try again.', true); }
+  }
   await tg.answer(cb.id, 'Sharing…');
   const r = await share.share(item, who);
   if (r && r.answer && !r.notified) await tg.say(tg.esc(r.answer), item.share_msg_id, share.chatOf(item));
 }
+
+// ─── the fixed keyboard, the menu and their helpers ─────────────────────────
+// Buttons send plain text, which the bot sees because it is an admin of the
+// group. Each has a /command twin that works regardless.
+const KB = { link: '🔗 Share a link', latest: '📰 Latest stories', status: '📊 Status', help: '❓ Help' };
+const KEYBOARD = {
+  keyboard: [[{ text: KB.link }, { text: KB.latest }], [{ text: KB.status }, { text: KB.help }]],
+  resize_keyboard: true, is_persistent: true
+};
+const LINK_PROMPT = '🔗 Paste a reyvaonline.com link for a share card';
+const COMMANDS = [
+  { command: 'latest', description: 'Newest Reyva stories — tap one for a card' },
+  { command: 'pull', description: 'A share card for a story: /pull <link>' },
+  { command: 'share', description: 'A fresh card for a story here: /share <id>' },
+  { command: 'status', description: 'Cards today and which channels are ready' },
+  { command: 'menu', description: 'Show the buttons again' },
+  { command: 'help', description: 'What the desk does' },
+  { command: 'id', description: 'This chat id and your user id' },
+];
+const HELP = `<b>Reyva Desk</b>
+Every new reyvaonline.com story arrives here as a share card, with an AI caption.
+
+<b>On a card</b>
+☑ / ☐ — pick the channels, then 📣 <b>Share</b>
+🎨 — switch the card between 🔵 blue (normal) and 🔴 red, before sharing
+🔁 — a new AI caption · ✏️ — edit it (whole text, or <code>old → new</code> to fix a word)
+↩️ Reply to a card with text to replace its caption
+
+<b>Buttons</b>
+${KB.link} — paste any Reyva link for a card (or just paste the link here)
+${KB.latest} — the newest stories, tap one for a card
+${KB.status} — cards today and which channels are set up`;
+
+async function sendMenu(chat, text) {
+  return tg.call('sendMessage', { chat_id: chat, text: text || '👇 Desk buttons are below the message box.', reply_markup: KEYBOARD });
+}
+
+async function pullAndCard(url, chat, replyTo) {
+  try {
+    const { item, existing } = await watcher.pullUrl(url);
+    if (existing && item.share_msg_id) return tg.say(`Already here as #${item.id}. Send /share ${item.id} for a fresh card.`, item.share_msg_id, chat);
+    await share.fromSource(item);
+  } catch (e) { await tg.say(`⚠️ ${errText(e)}`, replyTo, chat); }
+}
+
+async function sendLatest(chat) {
+  let list;
+  try { list = (await watcher.latest()).sort((a, b) => b.at - a.at).slice(0, 6); }
+  catch (e) { return tg.say(`⚠️ Couldn't read reyvaonline.com: ${errText(e)}`, null, chat); }
+  const known = await db.knownIds(BRAND, list.map(a => a.id), 'share');
+  const mvt = ms => new Date(ms + 5 * 3600 * 1000).toISOString().slice(11, 16);
+  const lines = list.map((a, i) => `${i + 1}. ${known.has(a.id) ? '✅' : '🆕'} ${tg.esc(a.title)} · ${mvt(a.at)}`);
+  const rows = list.map((a, i) => [{ text: `${i + 1}. ${known.has(a.id) ? '✅ carded · ' : '🃏 Card · '}#${a.id}`, callback_data: `rl:pl:${a.id}` }]);
+  return tg.call('sendMessage', { chat_id: chat, parse_mode: 'HTML', text: `<b>📰 Latest on reyvaonline.com</b>\n${lines.join('\n')}`, reply_markup: { inline_keyboard: rows } });
+}
+
+const REYVA_LINK = /^https?:\/\/(?:www\.)?reyvaonline\.com\/(?:article|news)\/\d+\S*$/i;
 
 // ─── ✏️ Edit caption: "old → new" lines patch it, anything else replaces it ──
 const FIX_LINE = /^(.+?)\s*(?:→|←|=>|->|<-|\|)\s*(.+)$/;
@@ -111,21 +178,29 @@ async function onMessage(msg) {
   }
   if (String(chat) !== groupId()) return;
   if (!allowed(msg.from, msg.chat)) {
-    if (/^\/\w+/.test(text) && msg.from && !msg.from.is_bot) {
+    if ((/^\/\w+/.test(text) || Object.values(KB).includes(text)) && msg.from && !msg.from.is_bot) {
       return tg.say(`🔒 ${tg.esc(nameOf(msg.from))}, you're not on the desk list yet. Ask an admin to add your id <code>${msg.from.id}</code> to RELAY_SHARE_APPROVERS_REYVA.`, msg.message_id, chat);
     }
     return;
   }
 
-  // /pull <link> — a share card for any Reyva story, now.
+  // Fixed keyboard buttons and their /command twins.
+  if (text === KB.help || /^\/(help|start)(@\w+)?$/.test(text)) return tg.call('sendMessage', { chat_id: chat, parse_mode: 'HTML', text: HELP, reply_markup: KEYBOARD });
+  if (/^\/menu(@\w+)?$/.test(text)) return sendMenu(chat);
+  if (text === KB.latest || /^\/latest(@\w+)?$/.test(text)) return sendLatest(chat);
+  if (text === KB.status) return onMessage({ ...msg, text: '/status' });
+  if (text === KB.link) {
+    return tg.call('sendMessage', { chat_id: chat, text: LINK_PROMPT,
+      reply_markup: { force_reply: true, selective: true, input_field_placeholder: 'https://reyvaonline.com/article/…' },
+      reply_parameters: { message_id: msg.message_id, allow_sending_without_reply: true } });
+  }
+
+  // /pull <link> — a share card for any Reyva story, now. A reply to the
+  // 🔗 prompt, or a Reyva link pasted on its own, does the same.
   const pull = /^\/pull(?:@\w+)?\s+(\S+)/.exec(text);
-  if (pull) {
-    try {
-      const { item, existing } = await watcher.pullUrl(pull[1]);
-      if (existing && item.share_msg_id) return tg.say(`Already here as #${item.id}. Send /share ${item.id} for a fresh card.`, item.share_msg_id, chat);
-      await share.fromSource(item);
-    } catch (e) { await tg.say(`⚠️ ${errText(e)}`, msg.message_id, chat); }
-    return;
+  const promptReply = msg.reply_to_message?.from?.is_bot && msg.reply_to_message?.text === LINK_PROMPT;
+  if (pull || (promptReply && text) || REYVA_LINK.test(text)) {
+    return pullAndCard(pull ? pull[1] : text.split(/\s+/)[0], chat, msg.message_id);
   }
 
   // /share <id> — a fresh card with a new caption; channels already posted stay ✅.
@@ -202,6 +277,17 @@ function startJobs() {
     console.log('relay: SETUP MODE — bot online; send /id in the desk group, then set RELAY_SHARE_CHAT_REYVA');
     return;
   }
+  // The "/" menu in the group, and the fixed keyboard posted once (MENU_VERSION
+  // bumps re-post it when the buttons change).
+  const MENU_VERSION = 1;
+  tg.call('setMyCommands', { commands: COMMANDS, scope: { type: 'chat', chat_id: Number(groupId()) } })
+    .catch(e => console.warn('relay: setMyCommands —', e.message));
+  db.getBaseline('menu:reyva').then(v => {
+    if (v === MENU_VERSION) return;
+    return sendMenu(groupId(), '👋 Reyva Desk is on. New reyvaonline.com stories will arrive here as share cards.\n\nTap ❓ Help any time.')
+      .then(() => db.setBaseline('menu:reyva', MENU_VERSION));
+  }).catch(e => console.warn('relay: menu —', e.message));
+
   const watchers = [{ mode: 'share', onNew: onNewShareStory }];
   const every = Math.min(Math.max(parseInt(env('RELAY_POLL_MINUTES'), 10) || 3, 1), 30);
   const run = label => watcher.tick(watchers)
