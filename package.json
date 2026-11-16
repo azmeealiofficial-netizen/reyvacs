@@ -1,12 +1,19 @@
 {
-  "name": "reyvacs",
+  "name": "reyva-creative-studio",
   "version": "1.0.0",
-  "description": "Reyva Creative Studio",
+  "private": true,
+  "description": "Reyva Creative Studio \u2014 branded posts, reels and videos for Reyva Online (from VxD Creative Studio)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "dependencies": {
-    "express": "^4.21.0"
+    "@anthropic-ai/sdk": "^0.110.0",
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

@@ -1,0 +1,34 @@
+# Reyva Creative Studio — app + Postgres on the home server.
+# Put the public hostname (reyva.azmee.dev) on your reverse proxy / Coolify,
+# pointing at this service's port 3000.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://reyva:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/reyva
+      PORT: "3000"
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: reyva
+      POSTGRES_DB: reyva
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - reyva-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reyva -d reyva"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  reyva-db:

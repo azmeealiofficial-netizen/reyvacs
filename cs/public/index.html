@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reyva Creative Studio</title>
+<link rel="icon" type="image/png" href="/img/reyva-logo-red.png">
+<meta name="description" content="Newsroom content studio for DHUVAS and VOICE — turn articles into branded social media posts and reels instantly.">
+<meta property="og:title" content="Reyva Creative Studio">
+<meta property="og:description" content="Turn Reyva Online articles into branded social content — photo posts, reels and video.">
+<meta property="og:url" content="https://reyva.azmee.dev">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Reyva Creative Studio">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reyva Creative Studio">
+<meta name="twitter:description" content="Turn Reyva Online articles into branded social content — photo posts, reels and video.">
+<link rel="preload" href="/fonts/aammufkF.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="/fonts/MVTypewriter_reg.ttf" as="font" type="font/ttf" crossorigin>
+<style>
+  :root{
+    --bg:#0e1013; --panel:#15181d; --panel2:#1a1e24; --field:#1f242c;
+    --border:#262c35; --border2:#303844;
+    --text:#e9edf3; --muted:#96a1b0; --accent:#3a97cb; --accent2:#41d2f5;
+    --ok:#6fd587; --warn:#ffcb63; --err:#ff8577; --info:#7fb2ff;
+    --r:10px; --r-sm:7px;
+    --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
+    --thaana:'VXDBody','MV Typewriter','MV Faseyha','MV Boli',sans-serif;
+    --thaana-head:'VXDHead','MV Aaamu FK','MV Faseyha','MV Boli',sans-serif;
+  }
+  @font-face{font-family:'VXDHead';src:url('/fonts/aammufkF.ttf') format('truetype');font-display:swap}
+  @font-face{font-family:'VXDBody';src:url('/fonts/MVTypewriter_reg.ttf') format('truetype');font-display:swap}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden}
+
+  /* shell */
+  .shell{display:grid;grid-template-columns:220px 1fr;height:100vh}
+  .side{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:18px 12px}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;border-bottom:1px solid var(--border);margin-bottom:14px}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:url(/img/reyva-logo-red.png) center/cover;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;letter-spacing:-.5px}
+  .brand .t{line-height:1.15}
+  .brand .t b{font-size:14.5px;display:block}
+  .brand .t span{font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav button{display:flex;align-items:center;gap:10px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:13.5px;padding:10px 12px;border-radius:var(--r-sm);cursor:pointer;text-align:left;width:100%}
+  .nav button:hover{background:var(--panel2);color:var(--text)}
+  .nav button.on{background:var(--panel2);color:var(--text);box-shadow:inset 2px 0 0 var(--accent)}
+  .nav svg{width:17px;height:17px;flex:none}
+  .side .foot{margin-top:auto;padding:10px 8px;font-size:11px;color:var(--muted)}
+  .side .foot button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;text-decoration:underline;padding:0}
+
+  /* workspace */
+  .main{overflow:hidden;position:relative}
+  .tool{display:none;height:100%}
+  .tool.on{display:grid;grid-template-columns:400px 1fr}
+  .controls{background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;padding:22px 20px}
+  .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;overflow:auto;background:
+    radial-gradient(1200px 500px at 70% -10%,rgba(255,85,0,.05),transparent 60%),var(--bg)}
+  .controls h2{font-size:16px;margin-bottom:2px}
+  .controls .sub{color:var(--muted);font-size:12px;margin-bottom:18px}
+
+  /* settings panel — full width, no stage */
+  .tool.settings-panel{display:none;height:100%}
+  .tool.settings-panel.on{display:block;overflow-y:auto;padding:40px}
+  .settings-wrap{max-width:560px;margin:0 auto}
+  .settings-wrap h2{font-size:18px;margin-bottom:4px}
+  .settings-wrap .sub{color:var(--muted);font-size:12.5px;margin-bottom:28px}
+  .settings-section{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:20px}
+  .settings-section h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px}
+
+  /* form primitives */
+  .grp{margin-bottom:16px}
+  .grp>label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px}
+  textarea,input[type=text],input[type=password],select{width:100%;background:var(--field);border:1px solid var(--border);color:var(--text);border-radius:var(--r-sm);padding:9px 10px;font-family:var(--thaana);font-size:15px;direction:rtl;outline:none}
+  textarea:focus,input[type=text]:focus,input[type=password]:focus,select:focus{border-color:var(--border2)}
+  textarea{min-height:54px;resize:vertical;line-height:1.8}
+  #rHook,#cHead{font-family:var(--thaana-head);font-size:17px}
+  #tool-reel .slideRow .cap{font-family:var(--thaana-head)}
+  select{direction:ltr;font-family:var(--font);font-size:12.5px;cursor:pointer}
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1;background:var(--field);border:1px solid var(--border);color:var(--text);padding:8px 6px;border-radius:var(--r-sm);cursor:pointer;font-size:12.5px;font-family:var(--font)}
+  .seg button.on{border-color:var(--accent);background:rgba(58,151,203,.16);color:#fff}
+  .btn-primary{width:100%;background:var(--accent);border:none;color:#fff;font-weight:700;padding:12px;border-radius:9px;cursor:pointer;font-size:14px;font-family:var(--font)}
+  .btn-primary:hover{background:var(--accent2)}
+  .btn-primary:disabled{opacity:.45;cursor:default}
+  .btn-ghost{width:100%;background:var(--field);border:1px solid var(--border);color:var(--text);padding:9px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;margin-top:6px;font-family:var(--font)}
+  .btn-ghost:hover{border-color:var(--border2)}
+  .upload{display:block;border:1.5px dashed var(--border2);border-radius:var(--r-sm);padding:14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12.5px}
+  .upload:hover{border-color:var(--accent);color:var(--text)}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .hint code{background:var(--field);padding:1px 5px;border-radius:4px;font-size:10.5px}
+  .status{font-size:11.5px;margin-top:7px;color:var(--muted);line-height:1.45}
+  .status.work{color:var(--warn)}.status.ok{color:var(--ok)}.status.err{color:var(--err)}
+  .slider-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .slider-row label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+  .slider-row input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+  .slider-row .val{font-size:12px;min-width:34px;text-align:right}
+
+  /* slide rows (reel) */
+  .slideRow{display:flex;gap:9px;margin-bottom:9px;align-items:flex-start;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px}
+  .slideRow img{width:50px;height:88px;object-fit:cover;border-radius:5px;flex:none}
+  .slideRow .col{flex:1;min-width:0}
+  .slideRow .rm{background:none;border:none;color:var(--err);cursor:pointer;font-size:15px;padding:2px 4px;flex:none}
+  .slideRow .cap{min-height:44px;font-size:14px}
+  .slideRow .rowlabel{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+
+  /* stage */
+  canvas.preview{border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.55);background:#000}
+  .pbar{width:100%;max-width:340px;height:6px;background:var(--field);border-radius:3px;overflow:hidden;visibility:hidden}
+  .pbar.on{visibility:visible}
+  .pbar>div{height:100%;width:0%;background:var(--accent);transition:width .15s}
+  .stage .transport{display:flex;gap:6px;width:230px}
+
+  @media(max-width:960px){
+    .shell{grid-template-columns:64px 1fr}
+    .brand .t,.nav button span,.side .foot{display:none}
+    .nav button{justify-content:center}
+    .tool.on{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+    .tool.settings-panel.on{padding:20px}
+    .controls{max-height:45vh}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand">
+      <div class="mark"></div>
+      <div class="t"><b>Reyva Studio</b><span>Creative</span></div>
+    </div>
+    <nav class="nav">
+      <button data-tool="card" class="on">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span>Photo Post</span>
+        <span id="queueBadge" style="display:none;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:auto"></span>
+      </button>
+      <button data-tool="reel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 8l5 4-5 4z"/></svg>
+        <span>Reel</span>
+      </button>
+      <button data-tool="video">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        <span>Video</span>
+      </button>
+      <button data-tool="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+    <div class="foot">
+      Reyva Creative Studio · from VxD CS v1.3.0
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="tool on" id="tool-card"></section>
+    <section class="tool" id="tool-reel"></section>
+    <section class="tool" id="tool-video"></section>
+    <section class="tool settings-panel" id="tool-settings">
+      <div class="settings-wrap">
+        <h2>Settings</h2>
+        <p class="sub">Studio configuration — synced across all devices</p>
+
+        <!-- Lock code gate for settings -->
+        <div id="sGate" style="display:none">
+          <div class="settings-section" style="text-align:center">
+            <h3>🔒 Settings locked</h3>
+            <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Enter the lock code to access settings</p>
+            <input type="password" id="sGateCode" style="direction:ltr;font-family:var(--font);text-align:center;max-width:200px;margin:0 auto 10px;display:block;letter-spacing:3px" placeholder="Lock code">
+            <button class="btn-primary" id="sGateGo" style="max-width:200px;margin:0 auto">Unlock</button>
+            <div class="status" id="sGateStatus"></div>
+          </div>
+        </div>
+
+        <!-- Settings content (shown after unlock) -->
+        <div id="sContent" style="display:none">
+          <div class="settings-section">
+            <h3>AI Guidelines</h3>
+            <div class="grp">
+              <label>Editorial rules (sent with every AI call)</label>
+              <textarea id="sGuidelines" style="min-height:120px;direction:ltr;font-family:var(--font);font-size:12.5px" placeholder="e.g.&#10;- Never use clickbait&#10;- Always mention the source&#10;- Keep tone serious for political news&#10;- Use simple Dhivehi, avoid jargon&#10;- Hashtags in English only"></textarea>
+              <button class="btn-ghost" id="sGuidelinesSave">Save guidelines</button>
+              <div class="status" id="sGuidelinesStatus"></div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Lock Code</h3>
+            <div class="grp">
+              <label>Change settings access code</label>
+              <input type="text" id="sLockCode" style="direction:ltr;font-family:var(--font);font-size:15px;letter-spacing:3px;text-align:center" placeholder="Enter new code">
+              <p class="hint">Minimum 4 characters. This code protects the settings page only.</p>
+              <button class="btn-ghost" id="sLockCodeSave">Update lock code</button>
+              <div class="status" id="sLockCodeStatus"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/studio-core.js?v=13"></script>
+<script src="/safe-zones.js?v=3"></script>
+<script src="/reyva-card.js?v=1"></script>
+<script src="/card-studio.js?v=23"></script>
+<script src="/reel-studio.js?v=18"></script>
+<script src="/clip-source.js?v=5"></script>
+<script src="/video-studio.js?v=10"></script>
+<script>
+  // guidelines shared state — loaded from DB
+  window.VxdGuidelines = '';
+
+  // nav
+  document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.nav button').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.tool').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('tool-' + b.dataset.tool).classList.add('on');
+    window.dispatchEvent(new Event('resize'));
+    // when switching to settings, check if locked
+    if (b.dataset.tool === 'settings') checkSettingsAuth();
+  }));
+
+  // load guidelines from DB (open, no auth needed)
+  async function loadGuidelines() {
+    try {
+      const r = await fetch('/api/settings');
+      if (!r.ok) return;
+      const data = await r.json();
+      if (data.guidelines) {
+        window.VxdGuidelines = data.guidelines;
+        document.getElementById('sGuidelines').value = data.guidelines;
+      }
+    } catch {}
+  }
+  loadGuidelines();
+
+  // settings auth check
+  async function checkSettingsAuth() {
+    try {
+      const r = await fetch('/api/settings/check');
+      const data = await r.json();
+      if (data.authed) {
+        document.getElementById('sGate').style.display = 'none';
+        document.getElementById('sContent').style.display = 'block';
+      } else {
+        document.getElementById('sGate').style.display = 'block';
+        document.getElementById('sContent').style.display = 'none';
+      }
+    } catch {
+      document.getElementById('sGate').style.display = 'block';
+      document.getElementById('sContent').style.display = 'none';
+    }
+  }
+
+  // settings unlock
+  document.getElementById('sGateGo').addEventListener('click', async () => {
+    const st = document.getElementById('sGateStatus');
+    const code = document.getElementById('sGateCode').value;
+    if (!code) { st.textContent = 'Enter the code'; st.className = 'status err'; return; }
+    try {
+      st.textContent = ''; st.className = 'status';
+      const r = await fetch('/api/settings/login', { method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ code }) });
+      if (!r.ok) throw new Error((await r.json()).error || 'Wrong code');
+      document.getElementById('sGateCode').value = '';
+      document.getElementById('sGate').style.display = 'none';
+      document.getElementById('sContent').style.display = 'block';
+    } catch (e) { st.textContent = e.message; st.className = 'status err'; }
+  });
+  document.getElementById('sGateCode').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('sGateGo').click();
+  });
+
+  // save guidelines
+  document.getElementById('sGuidelinesSave').addEventListener('click', async () => {
+    const st = document.getElementById('sGuidelinesStatus');
+    const val = document.getElementById('sGuidelines').value;
+    try {
+      st.textContent = 'Saving\u2026'; st.className = 'status work';
+      const r = await fetch('/api/settings', { method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ key: 'guidelines', value: val }) });
+      if (!r.ok) throw new Error((await r.json()).error || 'Failed');
+      window.VxdGuidelines = val;
+      st.textContent = 'Saved \u2713'; st.className = 'status ok';
+    } catch (e) { st.textContent = 'Error: ' + e.message; st.className = 'status err'; }
+  });
+
+  // save lock code
+  document.getElementById('sLockCodeSave').addEventListener('click', async () => {
+    const st = document.getElementById('sLockCodeStatus');
+    const val = document.getElementById('sLockCode').value;
+    if (!val || val.length < 4) { st.textContent = 'Code must be at least 4 characters'; st.className = 'status err'; return; }
+    try {
+      st.textContent = 'Updating\u2026'; st.className = 'status work';
+      const r = await fetch('/api/settings', { method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ key: 'lock_code', value: val }) });
+      if (!r.ok) throw new Error((await r.json()).error || 'Failed');
+      document.getElementById('sLockCode').value = '';
+      st.textContent = 'Lock code updated \u2713'; st.className = 'status ok';
+    } catch (e) { st.textContent = 'Error: ' + e.message; st.className = 'status err'; }
+  });
+
+  // ── Article queue (from Telegram) ──
+  let pendingArticles = [];
+
+  async function pollQueue() {
+    try {
+      const r = await fetch('/api/articles/pending');
+      if (!r.ok) return;
+      const data = await r.json();
+      pendingArticles = data.articles || [];
+      const badge = document.getElementById('queueBadge');
+      if (pendingArticles.length > 0) {
+        badge.textContent = pendingArticles.length;
+        badge.style.display = 'inline';
+      } else {
+        badge.style.display = 'none';
+      }
+      renderQueue();
+    } catch {}
+  }
+
+  function renderQueue() {
+    const box = document.getElementById('cQueue');
+    if (!box) return;
+    if (!pendingArticles.length) { box.innerHTML = '<p class="hint">No new articles from Telegram</p>'; return; }
+    box.innerHTML = pendingArticles.map(a =>
+      '<div style="background:var(--field);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;margin-bottom:8px">' +
+        '<div style="font-family:var(--thaana-head);font-size:13.5px;direction:rtl;margin-bottom:6px">' + (a.title || a.url) + '</div>' +
+        (a.shared_note ? '<div style="font-size:11px;color:#3fb950;margin-bottom:6px">\u2705 Shared from the Telegram group: ' + String(a.shared_note).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}) + '</div>' : '') +
+        '<div style="display:flex;gap:6px">' +
+          '<button class="btn-ghost" style="flex:1;margin:0;font-size:11px" onclick="loadArticle(' + a.id + ')">Load into studio</button>' +
+          '<button class="btn-ghost" style="width:auto;margin:0;font-size:11px;padding:6px 10px;color:var(--muted)" onclick="skipArticle(' + a.id + ')">Skip</button>' +
+        '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  window.loadArticle = async function(id) {
+    const article = pendingArticles.find(a => a.id === id);
+    if (!article) return;
+    window.dispatchEvent(new CustomEvent('vxd-load-article', { detail: article }));
+    await fetch('/api/articles/' + id + '/status', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: 'done' }) });
+    document.querySelector('[data-tool="card"]').click();
+    pollQueue();
+  };
+
+  window.skipArticle = async function(id) {
+    await fetch('/api/articles/' + id + '/status', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: 'skipped' }) });
+    pollQueue();
+  };
+
+  pollQueue();
+  setInterval(pollQueue, 30000);
+</script>
+<script>
+/* Brand access — the client half.
+ *
+ * The server is the gate: the queue, article fetching and every share
+ * destination are checked against cs_profiles.brands on each request whatever
+ * the UI shows. This only removes controls that would be refused, so nobody is
+ * offered a masthead they cannot publish to.
+ *
+ * The three brand pickers are injected by card-studio.js, reel-studio.js and
+ * video-studio.js when their panels build, which can happen after this runs —
+ * hence the observer rather than a single pass.
+ */
+(function () {
+  var allowed = null;
+
+  function filterGroup(el) {
+    var first = null;
+    el.querySelectorAll('button[data-v]').forEach(function (b) {
+      var ok = allowed.indexOf(b.dataset.v) !== -1;
+      b.style.display = ok ? '' : 'none';
+      if (ok && !first) first = b;
+    });
+    // If the default selection is a masthead this person cannot use, move it —
+    // with a real click, because each module holds its own state and only the
+    // event handler updates it.
+    var on = el.querySelector('button.on');
+    if (first && (!on || on.style.display === 'none')) first.click();
+  }
+
+  function sweep() {
+    if (!allowed) return;
+    ['cBrand', 'rBrand', 'vBrand'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && !el.dataset.csFiltered) { el.dataset.csFiltered = '1'; filterGroup(el); }
+    });
+  }
+
+  function denied(msg) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:grid;place-items:center;' +
+      'background:var(--bg,#0b0d10);color:var(--fg,#e6e8eb);text-align:center;padding:32px;' +
+      'font:15px/1.6 system-ui,-apple-system,sans-serif';
+    var box = document.createElement('div');
+    var icon = document.createElement('div');
+    icon.style.cssText = 'font-size:34px;margin-bottom:14px'; icon.textContent = '\u{1F3A8}';
+    var text = document.createElement('div');
+    text.style.maxWidth = '420px'; text.textContent = msg;          // textContent: never inject server text as HTML
+    var back = document.createElement('a');
+    back.href = 'https://reyvaonline.com'; back.textContent = 'Reyva Online';
+    back.style.cssText = 'display:inline-block;margin-top:18px;color:#3a97cb';
+    box.appendChild(icon); box.appendChild(text); box.appendChild(back);
+    d.appendChild(box); document.body.appendChild(d);
+  }
+
+  fetch('/api/me').then(function (r) {
+    if (r.status === 401) { denied('Not signed in.'); return null; }   // REYVA: open for now; no login page yet
+    return r.json().then(function (d) { return { status: r.status, d: d }; });
+  }).then(function (res) {
+    if (!res) return;
+    if (res.status === 403) { denied(res.d.error || 'No Creative Studio access.'); return; }
+    allowed = (res.d.user && res.d.user.brands) || [];
+    if (!allowed.length) { denied('No mastheads are assigned to your account yet.'); return; }
+    sweep();
+    new MutationObserver(sweep).observe(document.body, { childList: true, subtree: true });
+  }).catch(function () { /* transient — the server enforces regardless */ });
+})();
+</script>
+</body>
+
+</html>
