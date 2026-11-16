@@ -134,9 +134,8 @@
     cta: '',
     clampText: true,   // lay text out inside the active safe zone, not the raw frame
     ctaDefaults: {
-      // REYVA: the outro line is "follow <Reyva> for the latest news". Reyva's
-      // Thaana spelling isn't confirmed yet — empty renders no CTA, as for newscast.
-      reyva: '',
+      // REYVA: "follow Reyva Online for the latest news" (spelling ރޭވަ per Azmee, 2026-11-16)
+      reyva: '\u078c\u07a7\u0792\u07a7 \u079a\u07a6\u0784\u07a6\u0783\u07a7\u0787\u07a8 \u0789\u07a6\u07a2\u07aa\u078d\u07ab\u0789\u07a7\u078c\u07a6\u0781\u07b0 \u0783\u07ad\u0788\u07a6 \u0787\u07ae\u0782\u07b0\u078d\u07a6\u0787\u07a8\u0782\u07b0 \u078a\u07ae\u078d\u07af \u0786\u07ae\u0781\u07b0\u078d\u07a6\u0787\u07b0\u0788\u07a7',
       dhuvas: '\u078c\u07a7\u0792\u07a7 \u079a\u07a6\u0784\u07a6\u0783\u07a7\u0787\u07a8 \u0789\u07a6\u07a2\u07aa\u078d\u07ab\u0789\u07a7\u078c\u07a6\u0781\u07b0 \u078b\u07aa\u0788\u07a6\u0790\u07b0 \u078a\u07ae\u078d\u07af \u0786\u07ae\u0781\u07b0\u078d\u07a6\u0787\u07b0\u0788\u07a7',
       voice:  '\u078c\u07a7\u0792\u07a7 \u079a\u07a6\u0784\u07a6\u0783\u07a7\u0787\u07a8 \u0789\u07a6\u07a2\u07aa\u078d\u07ab\u0789\u07a7\u078c\u07a6\u0781\u07b0 \u0788\u07ae\u0787\u07a8\u0790\u07b0 \u078a\u07ae\u078d\u07af \u0786\u07ae\u0781\u07b0\u078d\u07a6\u0787\u07b0\u0788\u07a7',
       // TODO(Azmee): Thaana spelling of "Newscast" not supplied, and guessing it
