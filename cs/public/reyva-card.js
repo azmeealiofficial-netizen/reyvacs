@@ -219,7 +219,17 @@
 
   /* Fewest lines at maxW, then the narrowest width that keeps that count —
    * so the lines come out close to equal instead of a long line and a stub. */
-  function balanced(c, text, maxW, fs) {
+  function balanced(c, text, maxW, fs, minLines) {
+    // minLines: narrow the measure until the text takes at least that many lines.
+    if (minLines && wrap(c, text, maxW, fs, SC.FONT_HEAD).length < minLines
+        && String(text || '').trim().split(/\s+/).length >= minLines) {
+      let lo = maxW * 0.3, hi = maxW;
+      for (let i = 0; i < 18; i++) {
+        const mid = (lo + hi) / 2;
+        if (wrap(c, text, mid, fs, SC.FONT_HEAD).length >= minLines) lo = mid; else hi = mid;
+      }
+      maxW = lo;
+    }
     const n = wrap(c, text, maxW, fs, SC.FONT_HEAD).length;
     if (n <= 1) return wrap(c, text, maxW, fs, SC.FONT_HEAD);
     let lo = maxW * 0.3, hi = maxW;
@@ -260,13 +270,24 @@
     const areaTop = split + 46, areaBot = bottom - 64;
     const fits = (n, f) => (n - 1) * Math.round(f * LH) + f * 1.25 <= areaBot - areaTop;
     const auto = o.autoSize !== false;
-    let fs = auto ? HEAD.more : o.headSize;
-    let lines = balanced(c, cc.headline, maxW, fs);
-    if (auto && lines.length <= 2) { fs = HEAD.two; lines = balanced(c, cc.headline, maxW, fs); }
+    let fs, lines;
+    if (auto) {
+      // 1) Fits on two lines at 72 → 72. 2) Otherwise the 3+ route: up to 88,
+      //    shrunk to fit the panel, then 86% of that for air (option B).
+      lines = balanced(c, cc.headline, maxW, HEAD.two);
+      if (lines.length <= 2) fs = HEAD.two;
+      else {
+        fs = HEAD.more; lines = balanced(c, cc.headline, maxW, fs);
+        while (!fits(lines.length, fs) && fs > 30) { fs -= 2; lines = balanced(c, cc.headline, maxW, fs); }
+        // …and it stays on three lines (or more): at the smaller size it could
+        // squeeze onto two, which would read as an undersized two-line card.
+        fs = Math.round(fs * 0.86); lines = balanced(c, cc.headline, maxW, fs, 3);
+      }
+    } else {
+      fs = o.headSize; lines = balanced(c, cc.headline, maxW, fs);
+    }
+    // Never leave the panel, whichever route it took.
     while (!fits(lines.length, fs) && fs > 30) { fs -= 2; lines = balanced(c, cc.headline, maxW, fs); }
-    // 3+ lines: 86% of the size that fills the panel, so long headlines keep
-    // air around them (Reyva, 2026-11-17, option B). Two-line stays at 72.
-    if (auto && lines.length >= 3) { fs = Math.round(fs * 0.86); lines = balanced(c, cc.headline, maxW, fs); }
     const lh = Math.round(fs * LH);
     const blockH = (lines.length - 1) * lh + fs * 1.0;
     const yFirst = Math.round(areaTop + (areaBot - areaTop - blockH) / 2 + fs * 0.78);
