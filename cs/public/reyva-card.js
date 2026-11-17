@@ -249,7 +249,7 @@
     c.restore();
 
     // headline, centred in the panel above the pill
-    // Headline size (Reyva, 2026-11-17): 2 lines → 72, 3 or more → 88, wrapped
+    // Headline size (Reyva, 2026-11-17): 2 lines → 72, 3 or more → up to 88 then ×0.86, wrapped
     // wide (86% of the panel) and balanced so the lines come out near-equal.
     // It never leaves the panel: a long headline steps down until it fits,
     // with clear space above (photo) and below (link pill). autoSize: false —
@@ -264,6 +264,9 @@
     let lines = balanced(c, cc.headline, maxW, fs);
     if (auto && lines.length <= 2) { fs = HEAD.two; lines = balanced(c, cc.headline, maxW, fs); }
     while (!fits(lines.length, fs) && fs > 30) { fs -= 2; lines = balanced(c, cc.headline, maxW, fs); }
+    // 3+ lines: 86% of the size that fills the panel, so long headlines keep
+    // air around them (Reyva, 2026-11-17, option B). Two-line stays at 72.
+    if (auto && lines.length >= 3) { fs = Math.round(fs * 0.86); lines = balanced(c, cc.headline, maxW, fs); }
     const lh = Math.round(fs * LH);
     const blockH = (lines.length - 1) * lh + fs * 1.0;
     const yFirst = Math.round(areaTop + (areaBot - areaTop - blockH) / 2 + fs * 0.78);
