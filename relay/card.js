@@ -94,7 +94,7 @@ async function renderCard({ brand = 'reyva', headline, photo, url, palette }) {
   await card().draw(ctx, {
     w: W, h: H, tpl: 'news', pal,
     cc: { headline: headline || '', url: url || '', eyebrow: '' },
-    headSize: 55, photo: img, photoPos: { x: 0, y: 0 }
+    autoSize: true, headSize: 72, photo: img, photoPos: { x: 0, y: 0 }   // 72 two lines, 88 three+, always inside
   });
   return canvas.encode('jpeg', 90);
 }

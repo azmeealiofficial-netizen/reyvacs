@@ -215,6 +215,21 @@
     return out;
   }
 
+  const HEAD = { two: 72, more: 88 };
+
+  /* Fewest lines at maxW, then the narrowest width that keeps that count —
+   * so the lines come out close to equal instead of a long line and a stub. */
+  function balanced(c, text, maxW, fs) {
+    const n = wrap(c, text, maxW, fs, SC.FONT_HEAD).length;
+    if (n <= 1) return wrap(c, text, maxW, fs, SC.FONT_HEAD);
+    let lo = maxW * 0.3, hi = maxW;
+    for (let i = 0; i < 18; i++) {
+      const mid = (lo + hi) / 2;
+      if (wrap(c, text, mid, fs, SC.FONT_HEAD).length <= n) hi = mid; else lo = mid;
+    }
+    return wrap(c, text, hi, fs, SC.FONT_HEAD);
+  }
+
   /* ───────── NEWS ───────── */
   function drawNews(c, o, P) {
     const { w, h, cc } = o;
@@ -234,11 +249,22 @@
     c.restore();
 
     // headline, centred in the panel above the pill
-    // Measured off 5.png: 55px Aammu on a 100px line pitch (1.8×).
-    const fs = o.headSize, lh = Math.round(fs * 1.8);
-    // The templates wrap at ~2/3 of the panel: 3 short lines, not 2 long ones.
-    const lines = wrap(c, cc.headline, Math.round(fw * 0.67), fs, SC.FONT_HEAD);
-    const areaTop = split, areaBot = bottom - 26;
+    // Headline size (Reyva, 2026-11-17): 2 lines → 72, 3 or more → 88, wrapped
+    // wide (86% of the panel) and balanced so the lines come out near-equal.
+    // It never leaves the panel: a long headline steps down until it fits,
+    // with clear space above (photo) and below (link pill). autoSize: false —
+    // the studio's Heading size slider once moved — uses headSize as given,
+    // still shrinking only if it would overflow.
+    const maxW = Math.round(fw * 0.86);
+    const LH = 1.65;
+    const areaTop = split + 46, areaBot = bottom - 64;
+    const fits = (n, f) => (n - 1) * Math.round(f * LH) + f * 1.25 <= areaBot - areaTop;
+    const auto = o.autoSize !== false;
+    let fs = auto ? HEAD.more : o.headSize;
+    let lines = balanced(c, cc.headline, maxW, fs);
+    if (auto && lines.length <= 2) { fs = HEAD.two; lines = balanced(c, cc.headline, maxW, fs); }
+    while (!fits(lines.length, fs) && fs > 30) { fs -= 2; lines = balanced(c, cc.headline, maxW, fs); }
+    const lh = Math.round(fs * LH);
     const blockH = (lines.length - 1) * lh + fs * 1.0;
     const yFirst = Math.round(areaTop + (areaBot - areaTop - blockH) / 2 + fs * 0.78);
     shadowText(c, lines, w / 2, yFirst, lh, fs, P, 'center');

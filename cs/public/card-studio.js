@@ -471,7 +471,8 @@
     if (bs.layout === 'reyva' && window.ReyvaCard) {
       const cutOn = !!(state.cutOn && state.cut && state.cut.src === state.photo);
       await window.ReyvaCard.draw(ctx, { w, h, tpl: state.tpl, pal: state.reyvaPal, cc: c,
-        headSize: state.headSize, photo: state.photoImg, photoPos: state.photoPos,
+        headSize: state.headSize, autoSize: state.headAuto !== false,   // auto 72/88 until the slider is moved
+        photo: state.photoImg, photoPos: state.photoPos,
         cut: cutOn ? state.photoImg : null, photoSrc: state.photo });
       fit();
       return;
@@ -916,7 +917,7 @@
       row.innerHTML = '<label>Heading size</label><input type="range" min="30" max="90" step="1" value="'+state.headSize+'"><span class="val">'+state.headSize+'</span>';
       grp.appendChild(row);
       row.querySelector('input').addEventListener('input', e => {
-        state.headSize = +e.target.value; row.querySelector('.val').textContent = e.target.value; render();
+        state.headSize = +e.target.value; state.headAuto = false; row.querySelector('.val').textContent = e.target.value; render();
       });
     }
   }
@@ -1001,7 +1002,7 @@
       // fill source text
       if (data.text) { $('#cSrc').value = data.text; }
       // fill headline (Thaana if available)
-      if (data.title) { state.c.headline = data.title; }
+      if (data.title) { state.c.headline = data.title; state.headAuto = true; }   // REYVA: back to auto size
       // fill URL field
       try {
         const u = new URL(url);
@@ -1427,7 +1428,7 @@
     // fill source text
     if (a.text) $('#cSrc').value = a.text;
     // fill headline
-    if (a.title) state.c.headline = a.title;
+    if (a.title) { state.c.headline = a.title; state.headAuto = true; }   // REYVA: back to auto size
     // fill URL
     try { const u = new URL(a.url); state.c.url = u.hostname.replace('www.','')+u.pathname; } catch { state.c.url = a.url; }
     if (window.ReyvaCard) state.c.url = window.ReyvaCard.cardLink(state.c.url);   // REYVA
