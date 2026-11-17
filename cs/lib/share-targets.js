@@ -64,7 +64,9 @@ function telegramTarget(brand) {
   // fallback for a *different* bot (VSA 8486349896, Creative Studio 8988730556);
   // VSA reads its token from the database first, so sharing the name would have
   // been a latent bug rather than an immediate one — the worst kind.
-  const token   = env('CS_TELEGRAM_BOT_TOKEN_' + B) || env('CS_TELEGRAM_BOT_TOKEN');
+  // REYVA: one bot does both jobs — it runs the desk group and posts to the
+  // channel — so with no CS_ token set, the desk bot's token is used.
+  const token   = env('CS_TELEGRAM_BOT_TOKEN_' + B) || env('CS_TELEGRAM_BOT_TOKEN') || env('RELAY_TELEGRAM_BOT_TOKEN');
   const channel = env('CS_TELEGRAM_CHANNEL_' + B) || (brand === LEGACY ? env('CS_TELEGRAM_CHANNEL_ID') : '');
   return { token, channel, ready: !!(token && channel) };
 }
